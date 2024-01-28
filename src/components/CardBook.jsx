@@ -1,8 +1,43 @@
+import { message } from "antd";
+import axios from "axios";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
-const CardBook = ({ rating, title, page, author, image }) => {
+const CardBook = ({
+  rating,
+  title,
+  page,
+  author,
+  image,
+  id,
+  updateFavorites,
+}) => {
   const getStarColor = (index) => {
     return index < rating ? "text-yellow-500" : "text-slate-600";
+  };
+
+  const navigate = useNavigate();
+  const handleSubmit = async (e) => {
+    try {
+      e.preventDefault();
+
+      const { data } = await axios({
+        url: "http://localhost:3000/favorite",
+        method: "POST",
+        headers: {
+          authorization: localStorage.getItem("authorization"),
+        },
+        data: {
+          BookId: id,
+        },
+      });
+
+      message.success("Berhasil Menambahkan ke Favorite");
+      navigate("/");
+      updateFavorites();
+    } catch (error) {
+      message.error(error.response.data.message);
+    }
   };
 
   return (
@@ -41,7 +76,12 @@ const CardBook = ({ rating, title, page, author, image }) => {
           ))}
         </div>
         <div className="h-[45%] w-ful flex justify-center items-end">
-          <button className="w-[200px] h-[25px] bg-slate-800  text-white text-[10px] rounded-md">
+          <button
+            className="w-[200px] h-[25px] bg-slate-800  text-white text-[10px] rounded-md"
+            onClick={(e) => {
+              handleSubmit(e);
+            }}
+          >
             Add Favorites
           </button>
         </div>

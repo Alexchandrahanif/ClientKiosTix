@@ -2,14 +2,22 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Titik, Vector, Wanita } from "../assets";
 import CardBook from "../components/CardBook";
-import { Modal, Form, Input, Select, Button, Upload, message } from "antd";
+import {
+  Modal,
+  Form,
+  Input,
+  Select,
+  Button,
+  Upload,
+  message,
+  Popover,
+} from "antd";
 const { Search } = Input;
 const { Option } = Select;
 import { UploadOutlined } from "@ant-design/icons";
 import axios from "axios";
 
 const HomePage = () => {
-  const onSearch = (value, _e, info) => console.log(info?.source, value);
   const navigate = useNavigate();
 
   const [typeTombol, setTypeTombol] = useState("LOGIN");
@@ -18,6 +26,7 @@ const HomePage = () => {
   const [category, setCategory] = useState([]);
   const [author, setAuthor] = useState([]);
   const [book, setBook] = useState([]);
+  const [favorite, setFavorite] = useState([]);
 
   const [title, setTitle] = useState("");
   const [publicationYear, setPublciationYear] = useState("");
@@ -43,14 +52,19 @@ const HomePage = () => {
     }
   };
 
-  const fetchBook = async () => {
+  const fetchBook = async (search) => {
     try {
+      let params = {};
+      if (search) {
+        params.search = search;
+      }
       const { data } = await axios({
         url: "http://localhost:3000/book",
         method: "GET",
         headers: {
           authorization: localStorage.getItem("authorization"),
         },
+        params: params,
       });
 
       setBook(data.data);
@@ -75,12 +89,31 @@ const HomePage = () => {
     }
   };
 
+  const fetchFavorite = async () => {
+    try {
+      if (localStorage.getItem("authorization")) {
+        const { data } = await axios({
+          url: "http://localhost:3000/favorite",
+          method: "GET",
+          headers: {
+            authorization: localStorage.getItem("authorization"),
+          },
+        });
+
+        setFavorite(data.data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const loginHandle = (type) => {
     if (type == "LOGIN") {
       setTypeTombol("LOGOUT");
       navigate("/login");
     } else {
       navigate("/");
+      message.success(`Sampai jumpa lagi ${localStorage.getItem("username")}`);
       localStorage.clear();
       setTypeTombol("LOGIN");
     }
@@ -104,6 +137,7 @@ const HomePage = () => {
       setImage("");
     }
   };
+
   const handleAddBook = async (e) => {
     try {
       e.preventDefault();
@@ -132,7 +166,53 @@ const HomePage = () => {
 
       setIsModalVisible(false);
     } catch (error) {
-      console.error(error);
+      console.log(error);
+    }
+  };
+
+  const MyFavoritesPopover = () => {
+    const handleFavoritesClick = () => {
+      if (localStorage.getItem("authorization")) {
+      } else {
+        message.warning("Silahkan login dahulu");
+      }
+    };
+
+    if (localStorage.getItem("authorization")) {
+      return (
+        <Popover
+          content={
+            <div>
+              {favorite?.map((el) => {
+                return (
+                  <div key={el.id}>
+                    <p>{el.Book.title}</p>
+                  </div>
+                );
+              })}
+            </div>
+          }
+          placement="bottomRight"
+          title="My Favorites"
+          trigger="click"
+        >
+          <button
+            className="px-2 py-1 bg-slate-400 rounded-md font-semibold hover:cursor-pointer hover:bg-slate-500 text-[12px]"
+            onClick={handleFavoritesClick}
+          >
+            My Favorites
+          </button>
+        </Popover>
+      );
+    } else {
+      return (
+        <button
+          className="px-2 py-1 bg-slate-400 rounded-md font-semibold hover:cursor-pointer hover:bg-slate-500 text-[12px]"
+          onClick={handleFavoritesClick}
+        >
+          My Favorites
+        </button>
+      );
     }
   };
 
@@ -141,6 +221,14 @@ const HomePage = () => {
     fetchAuthor();
     fetchBook();
   }, [setTypeTombol]);
+
+  useEffect(() => {
+    fetchFavorite();
+  }, []);
+
+  const onSearch = (value) => {
+    fetchBook(value);
+  };
 
   return (
     <div className="w-full h-screen px-36">
@@ -159,7 +247,9 @@ const HomePage = () => {
             >
               ADD BOOK
             </Button>
-          ) : null}
+          ) : (
+            <MyFavoritesPopover />
+          )}
           {localStorage.getItem("authorization") ? (
             <button
               className="px-2 py-1 bg-slate-400 rounded-md font-semibold hover:cursor-pointer hover:bg-slate-500 text-[12px]"
@@ -214,6 +304,8 @@ const HomePage = () => {
                 image={el.image}
                 title={el.title}
                 page={el.countPage}
+                id={el.id}
+                updateFavorites={fetchFavorite}
               />
             );
           })
@@ -226,7 +318,9 @@ const HomePage = () => {
 
       {/* FOOTER */}
       <div className="w-full h-[50px] bg-slate-300 flex justify-center items-center">
-        <p>FOOTER</p>
+        <a href="https://alexhanif.me/" target="_blank" className="font-serif ">
+          Alex Chandra Hanif
+        </a>
       </div>
 
       {/* MODAL ADD BOOK */}
