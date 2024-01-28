@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Titik, Vector, Wanita } from "../assets";
 import { Input, Space } from "antd";
+import CardBook from "../components/CardBook";
 const { Search } = Input;
 
 const HomePage = () => {
@@ -23,6 +24,7 @@ const HomePage = () => {
   useEffect(() => {}, [setTypeTombol]);
   return (
     <div className="w-full px-36">
+      {/* NAVBAR */}
       <div className="w-full h-[50px] flex justify-between px-5 py-2 bg-slate-300 ">
         <div className="w-[50%] h-full flex items-center">
           <p className="font-semibold">MYBOOK</p>
@@ -49,6 +51,8 @@ const HomePage = () => {
           )}
         </div>
       </div>
+
+      {/* SECTION HERO */}
       <div className="w-full flex justify-between">
         <div className="w-full h-[300px] bg-slate-200 flex flex-col justify-center items-center gap-2 ">
           <p className="text-[40px] font-bold leading-10">
@@ -66,6 +70,18 @@ const HomePage = () => {
             }}
           />
         </div>
+      </div>
+
+      {/* BOOK */}
+      <div className="w-full flex justify-between items-center flex-wrap gap-2 px-3 py-5 bg-slate-50">
+        <CardBook  rating={2}/>
+        <CardBook />
+        <CardBook />
+        <CardBook />
+        <CardBook />
+        <CardBook />
+        <CardBook />
+        <CardBook />
       </div>
     </div>
   );
