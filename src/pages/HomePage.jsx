@@ -6,6 +6,7 @@ import { Modal, Form, Input, Select, Button, Upload } from "antd";
 const { Search } = Input;
 const { Option } = Select;
 import { UploadOutlined } from "@ant-design/icons";
+import axios from "axios";
 
 const HomePage = () => {
   const onSearch = (value, _e, info) => console.log(info?.source, value);
@@ -13,6 +14,60 @@ const HomePage = () => {
 
   const [typeTombol, setTypeTombol] = useState("LOGIN");
   const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const [category, setCategory] = useState([]);
+  const [author, setAuthor] = useState([]);
+  const [book, setBook] = useState([]);
+
+  const [title, setTitle] = useState("");
+
+  const fetchCategory = async () => {
+    try {
+      const { data } = await axios({
+        url: "http://localhost:3000/category",
+        method: "GET",
+        headers: {
+          authorization: localStorage.getItem("authorization"),
+        },
+      });
+
+      setCategory(data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchBook = async () => {
+    try {
+      const { data } = await axios({
+        url: "http://localhost:3000/book",
+        method: "GET",
+        headers: {
+          authorization: localStorage.getItem("authorization"),
+        },
+      });
+
+      setBook(data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchAuthor = async () => {
+    try {
+      const { data } = await axios({
+        url: "http://localhost:3000/author",
+        method: "GET",
+        headers: {
+          authorization: localStorage.getItem("authorization"),
+        },
+      });
+
+      setAuthor(data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const loginHandle = (type) => {
     if (type == "LOGIN") {
@@ -36,7 +91,11 @@ const HomePage = () => {
     setIsModalVisible(false);
   };
 
-  useEffect(() => {}, [setTypeTombol]);
+  useEffect(() => {
+    fetchCategory();
+    fetchAuthor();
+    fetchBook();
+  }, [setTypeTombol]);
 
   return (
     <div className="w-full px-36">
@@ -77,6 +136,7 @@ const HomePage = () => {
           )}
         </div>
       </div>
+
       {/* SECTION HERO */}
       <div className="w-full flex justify-between  bg-slate-200">
         <div className="w-full h-[240px] flex flex-col justify-center items-center gap-2 ">
@@ -96,25 +156,25 @@ const HomePage = () => {
           />
         </div>
       </div>
+
       {/* BOOK */}
       <div className="w-full flex justify-center items-center flex-wrap gap-7 px-3 py-5 bg-slate-100">
-        <CardBook rating={2} />
-        <CardBook />
-        <CardBook />
-        <CardBook />
-        <CardBook />
-        <CardBook />
-        <CardBook />
-        <CardBook />
-        <CardBook />
-        <CardBook />
-        <CardBook />
-        <CardBook />
+        {book?.length == 0 ? (
+          book?.map((el) => {
+            return <CardBook key={el.id} />;
+          })
+        ) : (
+          <div className="w-full h-[400px] flex justify-center items-center">
+            <p className="font-serif font-semibold">Book Empty</p>
+          </div>
+        )}
       </div>
+
       {/* FOOTER */}
       <div className="w-full h-[50px] bg-slate-300 flex justify-center items-center">
         <p>FOOTER</p>
       </div>
+
       {/* MODAL ADD BOOK */}
       <Modal
         title="Add Book"
@@ -192,8 +252,13 @@ const HomePage = () => {
             rules={[{ required: true, message: "Please select a category!" }]}
           >
             <Select placeholder="Select a category">
-              <Option value="1">Category 1</Option>
-              <Option value="2">Category 2</Option>
+              {category?.map((el) => {
+                return (
+                  <Option key={el.id} value={el.id}>
+                    {el.name}
+                  </Option>
+                );
+              })}
             </Select>
           </Form.Item>
 
@@ -203,8 +268,13 @@ const HomePage = () => {
             rules={[{ required: true, message: "Please select an author!" }]}
           >
             <Select placeholder="Select an author">
-              <Option value="1">Author 1</Option>
-              <Option value="2">Author 2</Option>
+              {author?.map((el) => {
+                return (
+                  <Option key={el.id} value={el.id}>
+                    {el.displayName}
+                  </Option>
+                );
+              })}
             </Select>
           </Form.Item>
         </Form>
