@@ -9,7 +9,11 @@ const CardBook = ({ rating, title, page, author, image }) => {
     <div className="w-[280px] h-[150px] flex justify-between bg-white rounded-lg ">
       <div className="w-[40%] h-full">
         <img
-          src={image}
+          src={
+            image.startsWith("upload")
+              ? `http://localhost:3000/${image}`
+              : image
+          }
           alt="buku"
           className="object-cover h-[100%] w-full bg-slate-700 rounded-l-lg "
         />
@@ -23,7 +27,7 @@ const CardBook = ({ rating, title, page, author, image }) => {
         </div>
         <div className="h-[15%] flex items-center">
           <p className="font-normal text-[12px] text-slate-600">
-            {page ? `${page} Hal` : ""}
+            {page ? `${page} page` : ""}
           </p>
         </div>
         <div className="h-[15%] flex items-center">

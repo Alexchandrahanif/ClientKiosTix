@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Titik, Vector, Wanita } from "../assets";
 import CardBook from "../components/CardBook";
-import { Modal, Form, Input, Select, Button, Upload } from "antd";
+import { Modal, Form, Input, Select, Button, Upload, message } from "antd";
 const { Search } = Input;
 const { Option } = Select;
 import { UploadOutlined } from "@ant-design/icons";
@@ -20,6 +20,12 @@ const HomePage = () => {
   const [book, setBook] = useState([]);
 
   const [title, setTitle] = useState("");
+  const [publicationYear, setPublciationYear] = useState("");
+  const [countPage, setCountPage] = useState("");
+  const [rating, setRating] = useState(null);
+  const [image, setImage] = useState("");
+  const [CategoryId, setCategoryId] = useState("");
+  const [AuthorId, setAuthorId] = useState("");
 
   const fetchCategory = async () => {
     try {
@@ -87,8 +93,47 @@ const HomePage = () => {
     return e && e.fileList.slice(0, 1);
   };
 
-  const handleAddBook = () => {
-    setIsModalVisible(false);
+  const handleChangeImage = (info) => {
+    const fileList = info.fileList;
+
+    if (fileList.length > 0) {
+      const latestImage = fileList[fileList.length - 1].originFileObj;
+
+      setImage(latestImage);
+    } else {
+      setImage("");
+    }
+  };
+  const handleAddBook = async (e) => {
+    try {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("publicationYear", publicationYear);
+      formData.append("countPage", countPage);
+      formData.append("rating", rating);
+      formData.append("CategoryId", CategoryId);
+      formData.append("AuthorId", AuthorId);
+      formData.append("image", image);
+
+      const { data } = await axios.post(
+        "http://localhost:3000/book",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            authorization: localStorage.getItem("authorization"),
+          },
+        }
+      );
+      message.success(data.message);
+      fetchBook();
+
+      setIsModalVisible(false);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {
@@ -98,7 +143,7 @@ const HomePage = () => {
   }, [setTypeTombol]);
 
   return (
-    <div className="w-full px-36">
+    <div className="w-full h-screen px-36">
       {/* NAVBAR */}
       <div className="w-full h-[50px] flex justify-between px-10 py-2 bg-slate-300 ">
         <div className="w-[50%] h-full flex items-center">
@@ -159,9 +204,18 @@ const HomePage = () => {
 
       {/* BOOK */}
       <div className="w-full flex justify-center items-center flex-wrap gap-7 px-3 py-5 bg-slate-100">
-        {book?.length == 0 ? (
+        {book?.length > 0 ? (
           book?.map((el) => {
-            return <CardBook key={el.id} />;
+            return (
+              <CardBook
+                key={el.id}
+                author={el?.Author?.displayName}
+                rating={el.rating}
+                image={el.image}
+                title={el.title}
+                page={el.countPage}
+              />
+            );
           })
         ) : (
           <div className="w-full h-[400px] flex justify-center items-center">
@@ -189,9 +243,7 @@ const HomePage = () => {
 
           <button
             className="w-[70px] h-[32px] bg-blue-700 rounded-md text-white font-semibold hover:cursor-pointer ml-3 hover:bg-blue-800 text-[12px]"
-            onClick={() => {
-              loginHandle("LOGIN");
-            }}
+            onClick={(e) => handleAddBook(e)}
           >
             Submit
           </button>,
@@ -203,7 +255,13 @@ const HomePage = () => {
             name="title"
             rules={[{ required: true, message: "Please input the title!" }]}
           >
-            <Input placeholder="Title" />
+            <Input
+              placeholder="Title"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+              }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -213,7 +271,13 @@ const HomePage = () => {
               { required: true, message: "Please input the public year!" },
             ]}
           >
-            <Input placeholder="Public Year" />
+            <Input
+              placeholder="Public Year"
+              value={publicationYear}
+              onChange={(e) => {
+                setPublciationYear(e.target.value);
+              }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -223,17 +287,30 @@ const HomePage = () => {
               { required: true, message: "Please input the count page!" },
             ]}
           >
-            <Input type="number" min={1} placeholder="Count Page" />
+            <Input
+              type="number"
+              min={1}
+              placeholder="Count Page"
+              value={countPage}
+              onChange={(e) => {
+                setCountPage(e.target.value);
+              }}
+            />
           </Form.Item>
 
           <Form.Item
-            className=" flex flex-col"
+            className="flex flex-col"
             name="image"
             valuePropName="fileList"
             getValueFromEvent={normFile}
             rules={[{ required: true, message: "Please upload an image!" }]}
           >
-            <Upload beforeUpload={() => false} listType="picture" maxCount={1}>
+            <Upload
+              beforeUpload={() => false}
+              listType="picture"
+              maxCount={1}
+              onChange={handleChangeImage}
+            >
               <Button icon={<UploadOutlined />}>Image</Button>
             </Upload>
           </Form.Item>
@@ -241,6 +318,10 @@ const HomePage = () => {
           <Form.Item
             className="flex flex-col"
             name="rating"
+            value={rating}
+            onChange={(e) => {
+              setRating(e.target.value);
+            }}
             rules={[{ required: true, message: "Please input the rating!" }]}
           >
             <Input type="number" min={1} max={5} placeholder="Rating" />
@@ -251,14 +332,16 @@ const HomePage = () => {
             name="categoryId"
             rules={[{ required: true, message: "Please select a category!" }]}
           >
-            <Select placeholder="Select a category">
-              {category?.map((el) => {
-                return (
-                  <Option key={el.id} value={el.id}>
-                    {el.name}
-                  </Option>
-                );
-              })}
+            <Select
+              placeholder="Select a category"
+              value={CategoryId}
+              onChange={(value) => setCategoryId(value)}
+            >
+              {category?.map((el) => (
+                <Option key={el.id} value={el.id}>
+                  {el.name}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
 
@@ -267,7 +350,11 @@ const HomePage = () => {
             name="authorId"
             rules={[{ required: true, message: "Please select an author!" }]}
           >
-            <Select placeholder="Select an author">
+            <Select
+              placeholder="Select an author"
+              value={AuthorId}
+              onChange={(value) => setAuthorId(value)}
+            >
               {author?.map((el) => {
                 return (
                   <Option key={el.id} value={el.id}>
