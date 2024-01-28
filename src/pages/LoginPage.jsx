@@ -29,6 +29,7 @@ const LoginPage = () => {
       if (data.statusCode == 200) {
         localStorage.setItem("authorization", data.authorization);
         localStorage.setItem("username", data.username);
+        localStorage.setItem("role", data.role);
         message.success(data.message);
         navigate("/");
       }

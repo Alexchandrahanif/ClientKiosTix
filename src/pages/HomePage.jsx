@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Titik, Vector, Wanita } from "../assets";
-import { Input, Space } from "antd";
 import CardBook from "../components/CardBook";
+import { Modal, Form, Input, Select, Button, Upload } from "antd";
 const { Search } = Input;
+const { Option } = Select;
+import { UploadOutlined } from "@ant-design/icons";
 
 const HomePage = () => {
   const onSearch = (value, _e, info) => console.log(info?.source, value);
   const navigate = useNavigate();
 
-  const [typeTombol, setTypeTombol] = useState("LOGOUT");
+  const [typeTombol, setTypeTombol] = useState("LOGIN");
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const loginHandle = (type) => {
     if (type == "LOGIN") {
@@ -21,41 +24,63 @@ const HomePage = () => {
       setTypeTombol("LOGIN");
     }
   };
+
+  const normFile = (e) => {
+    if (Array.isArray(e)) {
+      return e.slice(0, 1);
+    }
+    return e && e.fileList.slice(0, 1);
+  };
+
+  const handleAddBook = () => {
+    setIsModalVisible(false);
+  };
+
   useEffect(() => {}, [setTypeTombol]);
+
   return (
     <div className="w-full px-36">
       {/* NAVBAR */}
-      <div className="w-full h-[50px] flex justify-between px-5 py-2 bg-slate-300 ">
+      <div className="w-full h-[50px] flex justify-between px-10 py-2 bg-slate-300 ">
         <div className="w-[50%] h-full flex items-center">
           <p className="font-semibold">MYBOOK</p>
         </div>
-        <div className="w-[50%] h-full flex justify-end">
+        <div className="w-[50%] h-full flex justify-end gap-2">
+          {localStorage.getItem("role") == "ADMIN" ? (
+            <Button
+              className="px-2 py-1 bg-slate-400 rounded-md font-semibold hover:cursor-pointer hover:bg-slate-500 text-[12px]"
+              onClick={() => {
+                setIsModalVisible(true);
+              }}
+            >
+              ADD BOOK
+            </Button>
+          ) : null}
           {localStorage.getItem("authorization") ? (
             <button
-              className="px-2 py-1 bg-slate-300 rounded-md font-semibold hover:cursor-pointer hover:bg-slate-400 text-[12px]"
+              className="px-2 py-1 bg-slate-400 rounded-md font-semibold hover:cursor-pointer hover:bg-slate-500 text-[12px]"
               onClick={() => {
                 loginHandle("LOGOUT");
               }}
             >
-              {typeTombol}
+              LOGOUT
             </button>
           ) : (
             <button
-              className="px-2 py-1 bg-slate-300 rounded-md font-semibold hover:cursor-pointer hover:bg-slate-400 text-[12px]"
+              className="px-2 py-1 bg-slate-400 rounded-md font-semibold hover:cursor-pointer hover:bg-slate-500 text-[12px]"
               onClick={() => {
                 loginHandle("LOGIN");
               }}
             >
-              {typeTombol}
+              LOGIN
             </button>
           )}
         </div>
       </div>
-
       {/* SECTION HERO */}
-      <div className="w-full flex justify-between">
-        <div className="w-full h-[300px] bg-slate-200 flex flex-col justify-center items-center gap-2 ">
-          <p className="text-[40px] font-bold leading-10">
+      <div className="w-full flex justify-between  bg-slate-200">
+        <div className="w-full h-[240px] flex flex-col justify-center items-center gap-2 ">
+          <p className="text-[40px] font-bold leading-10 font-serif">
             READ AND ADD YOUR INSIGHT
           </p>
           <p className="text-[14px]">
@@ -71,10 +96,13 @@ const HomePage = () => {
           />
         </div>
       </div>
-
       {/* BOOK */}
-      <div className="w-full flex justify-between items-center flex-wrap gap-2 px-3 py-5 bg-slate-50">
-        <CardBook  rating={2}/>
+      <div className="w-full flex justify-center items-center flex-wrap gap-7 px-3 py-5 bg-slate-100">
+        <CardBook rating={2} />
+        <CardBook />
+        <CardBook />
+        <CardBook />
+        <CardBook />
         <CardBook />
         <CardBook />
         <CardBook />
@@ -83,6 +111,104 @@ const HomePage = () => {
         <CardBook />
         <CardBook />
       </div>
+      {/* FOOTER */}
+      <div className="w-full h-[50px] bg-slate-300 flex justify-center items-center">
+        <p>FOOTER</p>
+      </div>
+      {/* MODAL ADD BOOK */}
+      <Modal
+        title="Add Book"
+        visible={isModalVisible}
+        onCancel={() => {
+          setIsModalVisible(false);
+        }}
+        footer={[
+          <Button key="cancel" onClick={() => setIsModalVisible(false)}>
+            Cancel
+          </Button>,
+
+          <button
+            className="w-[70px] h-[32px] bg-blue-700 rounded-md text-white font-semibold hover:cursor-pointer ml-3 hover:bg-blue-800 text-[12px]"
+            onClick={() => {
+              loginHandle("LOGIN");
+            }}
+          >
+            Submit
+          </button>,
+        ]}
+      >
+        <Form className="grid grid-cols-2 gap-2">
+          <Form.Item
+            className="col-span-2 flex flex-col"
+            name="title"
+            rules={[{ required: true, message: "Please input the title!" }]}
+          >
+            <Input placeholder="Title" />
+          </Form.Item>
+
+          <Form.Item
+            className="flex flex-col"
+            name="publicYear"
+            rules={[
+              { required: true, message: "Please input the public year!" },
+            ]}
+          >
+            <Input placeholder="Public Year" />
+          </Form.Item>
+
+          <Form.Item
+            className="flex flex-col"
+            name="countPage"
+            rules={[
+              { required: true, message: "Please input the count page!" },
+            ]}
+          >
+            <Input type="number" min={1} placeholder="Count Page" />
+          </Form.Item>
+
+          <Form.Item
+            className=" flex flex-col"
+            name="image"
+            valuePropName="fileList"
+            getValueFromEvent={normFile}
+            rules={[{ required: true, message: "Please upload an image!" }]}
+          >
+            <Upload beforeUpload={() => false} listType="picture" maxCount={1}>
+              <Button icon={<UploadOutlined />}>Image</Button>
+            </Upload>
+          </Form.Item>
+
+          <Form.Item
+            className="flex flex-col"
+            name="rating"
+            rules={[{ required: true, message: "Please input the rating!" }]}
+          >
+            <Input type="number" min={1} max={5} placeholder="Rating" />
+          </Form.Item>
+
+          <Form.Item
+            className="flex flex-col"
+            name="categoryId"
+            rules={[{ required: true, message: "Please select a category!" }]}
+          >
+            <Select placeholder="Select a category">
+              <Option value="1">Category 1</Option>
+              <Option value="2">Category 2</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            className="flex flex-col"
+            name="authorId"
+            rules={[{ required: true, message: "Please select an author!" }]}
+          >
+            <Select placeholder="Select an author">
+              <Option value="1">Author 1</Option>
+              <Option value="2">Author 2</Option>
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
