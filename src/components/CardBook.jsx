@@ -75,15 +75,18 @@ const CardBook = ({
             </span>
           ))}
         </div>
+
         <div className="h-[45%] w-ful flex justify-center items-end">
-          <button
-            className="w-[200px] h-[25px] bg-slate-800  text-white text-[10px] rounded-md"
-            onClick={(e) => {
-              handleSubmit(e);
-            }}
-          >
-            Add Favorites
-          </button>
+          {localStorage.getItem("role") == "MEMBER" ? (
+            <button
+              className="w-[200px] h-[25px] bg-slate-800  text-white text-[10px] rounded-md"
+              onClick={(e) => {
+                handleSubmit(e);
+              }}
+            >
+              Add Favorites
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
